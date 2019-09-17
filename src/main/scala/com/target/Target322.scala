@@ -15,6 +15,7 @@ object Target322 {
       .config("spark.serializer","org.apache.spark.serializer.KryoSerializer")
       .getOrCreate()
     val frame = sparkSession.read.parquet(inputPath)
+    frame.cache()
     import sparkSession.implicits._
     import org.apache.spark.sql.functions._
     val res1 = frame.select($"ispname" as "key",$"winprice",
@@ -91,7 +92,6 @@ object Target322 {
       when($"ISEFFECTIVE"===1 and $"ISBILLING"===1 and $"ISWIN"===1,1) as "c8",
       when($"ISEFFECTIVE"===1 and $"ISBILLING"===1 and $"ISWIN"===1,1) as "c9"
     ).groupBy($"key").agg(count($"c1") as "c1",count($"c2") as "c2",count($"c3") as "c3",count($"c4") as "c4",count($"c5") as "c5",count($"c5")/count($"c4") as "s1",count($"c6") as "c6",count($"c7") as "c7",count($"c7")/count($"c6") as "s2",sum(when($"c8"===1,$"winprice"))/1000 as "s3",sum(when($"c9"===1,$"winprice"))/1000 as "s4")
-
     val res = res1.union(res2).union(res3).union(res4).union(res5).union(res6)
     res.show(100)
     sparkSession.stop()
