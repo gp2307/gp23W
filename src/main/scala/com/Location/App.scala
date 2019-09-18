@@ -1,6 +1,8 @@
 package com.Location
 
 
+import java.util.{Date, Random}
+
 import com.util.RptUtils
 import org.apache.commons.lang.StringUtils
 import org.apache.spark.sql.SparkSession
@@ -58,6 +60,6 @@ object App {
         x._1+x._2
       })
     }).map(t=>t._1+","+t._2.mkString(","))
-      .foreach(println)
+      .saveAsTextFile(outputPath+new Date().getTime.toString)
   }
 }
