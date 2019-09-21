@@ -15,7 +15,7 @@ object TagsZC extends Tag{
 
     val cityname = row.getAs[String]("cityname")
     if(StringUtils.isNotBlank(cityname)){
-      list:+=("APP"+cityname,1)
+      list:+=("ZC"+cityname,1)
     }
     list
   }

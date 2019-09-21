@@ -25,7 +25,7 @@ object TagsContext {
       //广告位类型
       val adList = TagsAd.makeTags(row)
       //App 名称
-      val appList = TagsApp.makeTags(row)
+       val appList: List[(String, Int)] = TagsApp.makeTags(row)
 
       val adplList = TagsAdpl.makeTags(row)
       val osList = TagsOS.makeTags(row)
@@ -37,16 +37,28 @@ object TagsContext {
       val cityList = TagsZC.makeTags(row)
       (userId,(adList,appList,adplList,osList,netList,ispList,keywordlist,provinceList,cityList,bussinessList))
     }).reduceByKey((x,y)=>{
-      val list1:List[(String,Int)] = (x._1.toBuffer++y._1.toBuffer).toList.groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      val list2:List[(String,Int)] = (x._2.toBuffer++y._2.toBuffer).toList.groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      val list3:List[(String,Int)] = (x._3.toBuffer++y._3.toBuffer).toList.groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      val list4:List[(String,Int)] = (x._4.toBuffer++y._4.toBuffer).toList.groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      val list5:List[(String,Int)] = (x._5.toBuffer++y._5.toBuffer).toList.groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      val list6:List[(String,Int)] = (x._6.toBuffer++y._6.toBuffer).toList.groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      val list7:List[(String,Int)] = (x._7.toBuffer++y._7.toBuffer).toList.groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      val list8:List[(String,Int)] = (x._8.toBuffer++y._8.toBuffer).toList.groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      val list9:List[(String,Int)] = (x._9.toBuffer++y._9.toBuffer).toList.groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      val list10:List[(String,Int)] = (x._10.toBuffer++y._10.toBuffer).toList.groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
+      val list1:List[(String,Int)] = (x._1:::y._1)
+      val list2:List[(String,Int)] = (x._2:::y._2)
+      val list3:List[(String,Int)] = (x._3:::y._3)
+      val list4:List[(String,Int)] = (x._4:::y._4)
+      val list5:List[(String,Int)] = (x._5:::y._5)
+      val list6:List[(String,Int)] = (x._6:::y._6)
+      val list7:List[(String,Int)] = (x._7:::y._7)
+      val list8:List[(String,Int)] = (x._8:::y._8)
+      val list9:List[(String,Int)] = (x._9:::y._9)
+      val list10:List[(String,Int)] = (x._10:::y._10)
+      (list1,list2,list3,list4,list5,list6,list7,list8,list9,list10)
+    }).mapValues(x=>{
+      val list1:List[(String,Int)] = (x._1).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
+      val list2:List[(String,Int)] = (x._2).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
+      val list3:List[(String,Int)] = (x._3).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
+      val list4:List[(String,Int)] = (x._4).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
+      val list5:List[(String,Int)] = (x._5).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
+      val list6:List[(String,Int)] = (x._6).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
+      val list7:List[(String,Int)] = (x._7).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
+      val list8:List[(String,Int)] = (x._8).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
+      val list9:List[(String,Int)] = (x._9).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
+      val list10:List[(String,Int)] = (x._10).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
       (list1,list2,list3,list4,list5,list6,list7,list8,list9,list10)
     }).foreach(println)
   }
