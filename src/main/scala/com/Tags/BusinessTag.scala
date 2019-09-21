@@ -20,7 +20,7 @@ object BusinessTag extends Tag{
       val lat = row.getAs[String]("lat").toDouble
       // 获取到商圈名称
       val business = getBusiness(long,lat)
-      if(StringUtils.isNoneBlank(business)){
+      if(StringUtils.isNotBlank(business)){
         val str = business.split(",")
         str.foreach(str=>{
           list :+= (str,1)
@@ -29,8 +29,6 @@ object BusinessTag extends Tag{
     }
     list
   }
-
-
   /**
     *获取商圈信息
    */

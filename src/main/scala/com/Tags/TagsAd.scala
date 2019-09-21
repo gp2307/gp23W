@@ -19,7 +19,7 @@ object TagsAd extends Tag{
       case v if v > 0 && v <=9 => list:+=("LC0"+v,1)
     }
     val adName = row.getAs[String]("adspacetypename")
-    if(StringUtils.isBlank(adName)){
+    if(StringUtils.isNotBlank(adName)){
       list:+=("LN"+adName,1)
     }
     list
