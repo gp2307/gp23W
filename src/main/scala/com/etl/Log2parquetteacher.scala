@@ -4,6 +4,8 @@ import com.util.{SchemaUtil, String2Type}
 import org.apache.spark.sql.{Row, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 
+import scala.util.Random
+
 /**
   * 进行数据格式转换
   */
@@ -52,8 +54,10 @@ object Log2parquetteacher {
         arr(19),
         String2Type.toInt(arr(20)),
         String2Type.toInt(arr(21)),
-        arr(22),
-        arr(23),
+//        arr(22),
+        (Random.nextDouble()*(117.30-115.25)+115.25).formatted("%.9f"),
+//        arr(23),
+        (Random.nextDouble()*(41.03-39.26)+39.26).formatted("%.9f"),
         arr(24),
         arr(25),
         String2Type.toInt(arr(26)),

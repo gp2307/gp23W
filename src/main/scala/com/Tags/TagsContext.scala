@@ -25,29 +25,29 @@ object TagsContext {
     import session.implicits._
 
 
-    //调用hbaseAPI
-    val load = ConfigFactory.load()
-    val HbaseTableName = load.getString("HBASE.tableName")
-    //创建hadoop任务
-    val configuration = session.sparkContext.hadoopConfiguration
-    //配置hbase连接
-    configuration.set("hbase.zookeeper.quorum",load.getString("HBASE.Host"))
-    //获取连接
-    val connection = ConnectionFactory.createConnection(configuration)
-    val admin = connection.getAdmin
-    //判断表是否已使用
-    if(!admin.tableExists(TableName.valueOf(HbaseTableName))){
-      val tableDescriptor = new HTableDescriptor(TableName.valueOf(HbaseTableName))
-      val columnDescriptor = new HColumnDescriptor("tags")
-      tableDescriptor.addFamily(columnDescriptor)
-      admin.createTable(tableDescriptor)
-      admin.close()
-      connection.close()
-    }
-    val conf = new JobConf(configuration)
-    //指定输出类型
-    conf.setOutputFormat(classOf[TableOutputFormat])
-    conf.set(TableOutputFormat.OUTPUT_TABLE,HbaseTableName)
+//    //调用hbaseAPI
+//    val load = ConfigFactory.load()
+//    val HbaseTableName = load.getString("HBASE.tableName")
+//    //创建hadoop任务
+//    val configuration = session.sparkContext.hadoopConfiguration
+//    //配置hbase连接
+//    configuration.set("hbase.zookeeper.quorum",load.getString("HBASE.Host"))
+//    //获取连接
+//    val connection = ConnectionFactory.createConnection(configuration)
+//    val admin = connection.getAdmin
+//    //判断表是否已使用
+//    if(!admin.tableExists(TableName.valueOf(HbaseTableName))){
+//      val tableDescriptor = new HTableDescriptor(TableName.valueOf(HbaseTableName))
+//      val columnDescriptor = new HColumnDescriptor("tags")
+//      tableDescriptor.addFamily(columnDescriptor)
+//      admin.createTable(tableDescriptor)
+//      admin.close()
+//      connection.close()
+//    }
+//    val conf = new JobConf(configuration)
+//    //指定输出类型
+//    conf.setOutputFormat(classOf[TableOutputFormat])
+//    conf.set(TableOutputFormat.OUTPUT_TABLE,HbaseTableName)
 
 
     //读取文件
@@ -72,20 +72,20 @@ object TagsContext {
       val cityList = TagsZC.makeTags(row)
       (userId,(adList:::appList:::adplList:::osList:::netList:::ispList:::keywordlist:::provinceList:::cityList:::bussinessList))
     }).reduceByKey((x,y)=>{
-      (x:::y)
+      x:::y
     }).mapValues(x=>{
       val list1:List[(String,Int)] = x.groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
       list1
     })
-    res.map{
-      case (userId,userTags) =>{
-        // 设置rowkey和列、列名
-        val put = new Put(Bytes.toBytes(userId))
-        put.addImmutable(Bytes.toBytes("tags"),Bytes.toBytes("20190922"),Bytes.toBytes(userTags.mkString(",")))
-        (new ImmutableBytesWritable(),put)
-      }
-    }.saveAsHadoopDataset(conf)
-
+//    res.map{
+//      case (userId,userTags) =>{
+//        // 设置rowkey和列、列名
+//        val put = new Put(Bytes.toBytes(userId))
+//        put.addImmutable(Bytes.toBytes("tags"),Bytes.toBytes("20190922"),Bytes.toBytes(userTags.mkString(",")))
+//        (new ImmutableBytesWritable(),put)
+//      }
+//    }.saveAsHadoopDataset(conf)
+    res.foreach(println)
     session.stop()
   }
 }
