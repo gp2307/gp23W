@@ -1,6 +1,13 @@
 package com.Tags
 
+import com.typesafe.config.ConfigFactory
 import com.util.TagUtils
+import org.apache.hadoop.hbase.{HColumnDescriptor, HTableDescriptor, TableName}
+import org.apache.hadoop.hbase.client.{ConnectionFactory, Put}
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable
+import org.apache.hadoop.hbase.mapred.TableOutputFormat
+import org.apache.hadoop.hbase.util.Bytes
+import org.apache.hadoop.mapred.JobConf
 import org.apache.spark.sql.SparkSession
 
 /**
@@ -16,9 +23,37 @@ object TagsContext {
     val Array(inputPath) = args
     val session = SparkSession.builder().appName("tags").master("local").getOrCreate()
     import session.implicits._
+
+
+    //调用hbaseAPI
+    val load = ConfigFactory.load()
+    val HbaseTableName = load.getString("HBASE.tableName")
+    //创建hadoop任务
+    val configuration = session.sparkContext.hadoopConfiguration
+    //配置hbase连接
+    configuration.set("hbase.zookeeper.quorum",load.getString("HBASE.Host"))
+    //获取连接
+    val connection = ConnectionFactory.createConnection(configuration)
+    val admin = connection.getAdmin
+    //判断表是否已使用
+    if(!admin.tableExists(TableName.valueOf(HbaseTableName))){
+      val tableDescriptor = new HTableDescriptor(TableName.valueOf(HbaseTableName))
+      val columnDescriptor = new HColumnDescriptor("tags")
+      tableDescriptor.addFamily(columnDescriptor)
+      admin.createTable(tableDescriptor)
+      admin.close()
+      connection.close()
+    }
+    val conf = new JobConf(configuration)
+    //指定输出类型
+    conf.setOutputFormat(classOf[TableOutputFormat])
+    conf.set(TableOutputFormat.OUTPUT_TABLE,HbaseTableName)
+
+
+    //读取文件
     val frame = session.read.parquet(inputPath)
     //处理数据信息
-    frame.rdd.map(row=>{
+    val res = frame.rdd.map(row=>{
       //获取用户的唯一ID
       val userId = TagUtils.getOneUserId(row)
       //接下来标签实现
@@ -35,31 +70,22 @@ object TagsContext {
       val keywordlist = TagsKw.makeTags(row)
       val provinceList = TagsZP.makeTags(row)
       val cityList = TagsZC.makeTags(row)
-      (userId,(adList,appList,adplList,osList,netList,ispList,keywordlist,provinceList,cityList,bussinessList))
+      (userId,(adList:::appList:::adplList:::osList:::netList:::ispList:::keywordlist:::provinceList:::cityList:::bussinessList))
     }).reduceByKey((x,y)=>{
-      val list1:List[(String,Int)] = (x._1:::y._1)
-      val list2:List[(String,Int)] = (x._2:::y._2)
-      val list3:List[(String,Int)] = (x._3:::y._3)
-      val list4:List[(String,Int)] = (x._4:::y._4)
-      val list5:List[(String,Int)] = (x._5:::y._5)
-      val list6:List[(String,Int)] = (x._6:::y._6)
-      val list7:List[(String,Int)] = (x._7:::y._7)
-      val list8:List[(String,Int)] = (x._8:::y._8)
-      val list9:List[(String,Int)] = (x._9:::y._9)
-      val list10:List[(String,Int)] = (x._10:::y._10)
-      (list1,list2,list3,list4,list5,list6,list7,list8,list9,list10)
+      (x:::y)
     }).mapValues(x=>{
-      val list1:List[(String,Int)] = (x._1).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      val list2:List[(String,Int)] = (x._2).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      val list3:List[(String,Int)] = (x._3).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      val list4:List[(String,Int)] = (x._4).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      val list5:List[(String,Int)] = (x._5).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      val list6:List[(String,Int)] = (x._6).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      val list7:List[(String,Int)] = (x._7).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      val list8:List[(String,Int)] = (x._8).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      val list9:List[(String,Int)] = (x._9).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      val list10:List[(String,Int)] = (x._10).groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
-      (list1,list2,list3,list4,list5,list6,list7,list8,list9,list10)
-    }).foreach(println)
+      val list1:List[(String,Int)] = x.groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
+      list1
+    })
+    res.map{
+      case (userId,userTags) =>{
+        // 设置rowkey和列、列名
+        val put = new Put(Bytes.toBytes(userId))
+        put.addImmutable(Bytes.toBytes("tags"),Bytes.toBytes("20190922"),Bytes.toBytes(userTags.mkString(",")))
+        (new ImmutableBytesWritable(),put)
+      }
+    }.saveAsHadoopDataset(conf)
+
+    session.stop()
   }
 }
