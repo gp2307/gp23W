@@ -56,6 +56,7 @@ object TagsContext {
     val res = frame.rdd.map(row=>{
       //获取用户的唯一ID
       val userId = TagUtils.getOneUserId(row)
+//      val userId = TagUtils.getallUserId(row).mkString(",").hashCode.toLong
       //接下来标签实现
       //广告位类型
       val adList = TagsAd.makeTags(row)
@@ -74,7 +75,7 @@ object TagsContext {
     }).reduceByKey((x,y)=>{
       x:::y
     }).mapValues(x=>{
-      val list1:List[(String,Int)] = x.groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
+      val list1 = x.groupBy(_._1).mapValues(x=>x.map(x=>x._2).reduce(_+_)).toList
       list1
     })
 //    res.map{

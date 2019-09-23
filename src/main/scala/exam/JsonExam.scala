@@ -8,6 +8,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 object JsonExam {
   def main(args: Array[String]): Unit= {
+    println(args.length)
     val Array(inputPath) = args
     val conf = new SparkConf().setAppName("json").setMaster("local[*]")
     val sc = new SparkContext(conf)

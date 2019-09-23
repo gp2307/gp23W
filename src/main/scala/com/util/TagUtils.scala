@@ -26,4 +26,14 @@ object TagUtils {
       case _ => "其他"
     }
   }
+  //获取所有用户的唯一ID
+  def getallUserId(v:Row):List[String]={
+    var list = List[String]()
+    if(StringUtils.isNoneBlank(v.getAs[String]("imei"))) list:+="IM"+v.getAs[String]("imei")
+    if (StringUtils.isNoneBlank(v.getAs[String]("mac")) ) list:+="IM"+v.getAs[String]("mac")
+    if (StringUtils.isNoneBlank(v.getAs[String]("idfa")) ) list:+="IM"+v.getAs[String]("idfa")
+    if (StringUtils.isNoneBlank(v.getAs[String]("openudid"))) list:+="IM"+v.getAs[String]("openudid")
+    if (StringUtils.isNoneBlank(v.getAs[String]("androidid"))) list:+="IM"+v.getAs[String]("androidid")
+    list
+  }
 }
